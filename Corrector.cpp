@@ -58,6 +58,8 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
                         palabra_Limpia[index] = c + 32; // Convertimos a minúscula sumando 32
                         index++;
                     }
+
+                }
                     // Cualquier otro carácter se ignora
                 palabra_Limpia[index] = '\0'; 
 
