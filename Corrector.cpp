@@ -12,7 +12,8 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 
     if (origin != NULL) { 
         char linea[1024];
-        const char *delimiters = " ,;().\r\t\n"; 
+        // Ampliación de delimitadores para evitar fusiones con signos de puntuación extendidos
+        const char *delimiters = " ,;().\r\t\n¿?¡!-\":_"; 
 
         while(fgets(linea, sizeof(linea), origin) != NULL) { 
             char *palabra = strtok(linea, delimiters); 
@@ -80,13 +81,13 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
     int izq, der, medio, comp, pos;
     bool existe;
 
-    // 1. Incluir la palabra original
     strcpy(szPalabrasSugeridas[0], szPalabraLeida);
     iNumSugeridas = 1;
 
     int len = strlen(szPalabraLeida);
+    if (len >= TAMTOKEN) len = TAMTOKEN - 1; 
 
-    // 2. Supresión de un caracter
+    // Supresión
     for (int i = 0; i < len; i++) {
         int index = 0;
         for (int j = 0; j < len; j++) {
@@ -94,7 +95,6 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         }
         temp[index] = '\0';
         
-        // Bloque de inserción ordenada
         izq = 0; der = iNumSugeridas - 1; pos = 0; existe = false;
         while (izq <= der) {
             medio = izq + (der - izq) / 2;
@@ -103,21 +103,20 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
             if (comp < 0) { der = medio - 1; pos = medio; }
             else { izq = medio + 1; pos = izq; }
         }
-        if (!existe) {
+        if (!existe && iNumSugeridas < 5000) { // Prevención de buffer overflow
             for(int k = iNumSugeridas; k > pos; k--) strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
             strcpy(szPalabrasSugeridas[pos], temp);
             iNumSugeridas++;
         }
     }
 
-    // 3. Intercambio de caracteres adyacentes
+    // Intercambio
     for (int i = 0; i < len - 1; i++) {
         strcpy(temp, szPalabraLeida);
         char c = temp[i];
         temp[i] = temp[i + 1];
         temp[i + 1] = c;
         
-        // Bloque de inserción ordenada
         izq = 0; der = iNumSugeridas - 1; pos = 0; existe = false;
         while (izq <= der) {
             medio = izq + (der - izq) / 2;
@@ -126,18 +125,18 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
             if (comp < 0) { der = medio - 1; pos = medio; }
             else { izq = medio + 1; pos = izq; }
         }
-        if (!existe) {
+        if (!existe && iNumSugeridas < 5000) { // Prevención de buffer overflow
             for(int k = iNumSugeridas; k > pos; k--) strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
             strcpy(szPalabrasSugeridas[pos], temp);
             iNumSugeridas++;
         }
     }
-} // <--- Faltaba cerrar esta llave
+}
 
 void ListaCandidatas(
 	char szPalabrasSugeridas[][TAMTOKEN], int iNumSugeridas,
 	char szPalabras[][TAMTOKEN], int iEstadisticas[], int iNumElementos,
 	char szListaFinal[][TAMTOKEN], int iPeso[], int &iNumLista)
 {
-    // Función vacía para cumplir con la firma requerida
+    // Implementación pendiente
 }
