@@ -4,9 +4,17 @@
 #include <ctype.h>
 #include "corrector.h"
 
-// Función auxiliar para no repetir código
+// Función auxiliar para insertar palabras ordenadas
 void InsertarSugerencia(char *temp, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
 {
+    // 1. Evitar sugerir cadenas vacías (como pasa al suprimir la única letra de una palabra)
+    if (temp[0] == '\0') {
+        return; 
+    }
+
+    // 2. Blindaje de seguridad para que la sugerencia nunca exceda el arreglo bidimensional
+    temp[TAMTOKEN - 1] = '\0';
+
     int izq = 0, der = iNumSugeridas - 1, pos = 0;
     bool existe = false;
 
@@ -26,8 +34,8 @@ void InsertarSugerencia(char *temp, char szPalabrasSugeridas[][TAMTOKEN], int &i
         }
     }
 
-    // Limitamos prudentemente para no desbordar el arreglo principal de sugerencias
-    if (!existe && iNumSugeridas < 4999) { 
+    // 3. Límite conservador para evitar desbordar el arreglo principal del evaluador
+    if (!existe && iNumSugeridas < 4500) { 
         for(int k = iNumSugeridas; k > pos; k--) {
             strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
         }
@@ -105,19 +113,21 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
 {
     iNumSugeridas = 0;
-    char temp[TAMTOKEN];
     
-    // El evaluador espera letras del español (32 caracteres)
-    const char alfabeto[] = "abcdefghijklmnopqrstuvwxyzáéíóúñ";
+    // Usamos un buffer más grande que TAMTOKEN temporalmente para evitar el Buffer Overflow local
+    char temp[256]; 
+    
+    // Alfabeto utilizando códigos Hexadecimales de un solo byte (Evita errores de UTF-8)
+    // \xE1=á, \xE9=é, \xED=í, \xF3=ó, \xFA=ú, \xF1=ñ
+    const char alfabeto[] = "abcdefghijklmnopqrstuvwxyz\xE1\xE9\xED\xF3\xFA\xF1";
 
     int len = strlen(szPalabraLeida);
     
-    // BLINDAJE CONTRA CRASHEOS: Garantizar espacio para Inserción y fin de cadena
+    // Garantizar que quede espacio para inserciones sin pasarse nunca de TAMTOKEN
     if (len > TAMTOKEN - 2) {
         len = TAMTOKEN - 2; 
     }
 
-    // Copiamos la palabra original garantizando que es segura en tamaño
     char palabraSegura[TAMTOKEN];
     strncpy(palabraSegura, szPalabraLeida, len);
     palabraSegura[len] = '\0';
@@ -147,7 +157,7 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
     }
 
-    // 3. Sustitución (Reemplazar 1 letra por cada carácter del alfabeto)
+    // 3. Sustitución (Reemplazar 1 letra)
     for (int i = 0; i < len; i++) {
         for (int a = 0; alfabeto[a] != '\0'; a++) {
             strcpy(temp, palabraSegura);
@@ -156,17 +166,17 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         }
     }
 
-    // 4. Inserción (Agregar 1 letra del alfabeto en cada posición, incluyendo al final)
+    // 4. Inserción (Agregar 1 letra)
     for (int i = 0; i <= len; i++) {
         for (int a = 0; alfabeto[a] != '\0'; a++) {
             int index = 0;
-            // Mitad izquierda
+            // Lado izquierdo
             for (int j = 0; j < i; j++) {
                 temp[index++] = palabraSegura[j];
             }
-            // Inserción
+            // Letra insertada
             temp[index++] = alfabeto[a];
-            // Mitad derecha
+            // Lado derecho
             for (int j = i; j < len; j++) {
                 temp[index++] = palabraSegura[j];
             }
@@ -182,5 +192,5 @@ void ListaCandidatas(
 	char szPalabras[][TAMTOKEN], int iEstadisticas[], int iNumElementos,
 	char szListaFinal[][TAMTOKEN], int iPeso[], int &iNumLista)
 {
-    // Aún en blanco para tu futura implementación
+    // Pendiente para la siguiente fase
 }
