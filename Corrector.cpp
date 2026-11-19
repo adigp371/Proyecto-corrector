@@ -4,44 +4,17 @@
 #include <ctype.h>
 #include "corrector.h"
 
-// Función auxiliar para insertar palabras ordenadas
-void InsertarSugerencia(char *temp, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
+// Función auxiliar segura para agregar a la lista de clonadas
+void AgregarClon(const char *temp, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
 {
-    // 1. Evitar sugerir cadenas vacías (como pasa al suprimir la única letra de una palabra)
+    // Omitir cadenas vacías (como al suprimir la única letra de una palabra de tamaño 1)
     if (temp[0] == '\0') {
         return; 
     }
-
-    // 2. Blindaje de seguridad para que la sugerencia nunca exceda el arreglo bidimensional
-    temp[TAMTOKEN - 1] = '\0';
-
-    int izq = 0, der = iNumSugeridas - 1, pos = 0;
-    bool existe = false;
-
-    while (izq <= der) {
-        int medio = izq + (der - izq) / 2;
-        int comp = strcmp(temp, szPalabrasSugeridas[medio]);
-        if (comp == 0) { 
-            existe = true; 
-            break; 
-        }
-        if (comp < 0) { 
-            der = medio - 1; 
-            pos = medio; 
-        } else { 
-            izq = medio + 1; 
-            pos = izq; 
-        }
-    }
-
-    // 3. Límite conservador para evitar desbordar el arreglo principal del evaluador
-    if (!existe && iNumSugeridas < 4500) { 
-        for(int k = iNumSugeridas; k > pos; k--) {
-            strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
-        }
-        strcpy(szPalabrasSugeridas[pos], temp);
-        iNumSugeridas++;
-    }
+    // Copiar de forma segura respetando el tamaño máximo del token
+    strncpy(szPalabrasSugeridas[iNumSugeridas], temp, TAMTOKEN - 1);
+    szPalabrasSugeridas[iNumSugeridas][TAMTOKEN - 1] = '\0';
+    iNumSugeridas++;
 }
 
 void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int &iNumElementos)
@@ -113,56 +86,50 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
 {
     iNumSugeridas = 0;
-    
-    // Usamos un buffer más grande que TAMTOKEN temporalmente para evitar el Buffer Overflow local
     char temp[256]; 
     
-    // Alfabeto utilizando códigos Hexadecimales de un solo byte (Evita errores de UTF-8)
+    // Alfabeto utilizando códigos Hexadecimales 
     // \xE1=á, \xE9=é, \xED=í, \xF3=ó, \xFA=ú, \xF1=ñ
     const char alfabeto[] = "abcdefghijklmnopqrstuvwxyz\xE1\xE9\xED\xF3\xFA\xF1";
 
     int len = strlen(szPalabraLeida);
-    
-    // Garantizar que quede espacio para inserciones sin pasarse nunca de TAMTOKEN
+    // Limitamos la longitud operativa para que jamás exceda el límite al hacer inserciones
     if (len > TAMTOKEN - 2) {
         len = TAMTOKEN - 2; 
     }
 
-    char palabraSegura[TAMTOKEN];
-    strncpy(palabraSegura, szPalabraLeida, len);
-    palabraSegura[len] = '\0';
-
     // 0. Palabra original
-    strcpy(szPalabrasSugeridas[0], palabraSegura);
-    iNumSugeridas = 1;
+    AgregarClon(szPalabraLeida, szPalabrasSugeridas, iNumSugeridas);
 
     // 1. Supresión (Borrar 1 letra)
     for (int i = 0; i < len; i++) {
         int index = 0;
         for (int j = 0; j < len; j++) {
             if (j != i) {
-                temp[index++] = palabraSegura[j];
+                temp[index++] = szPalabraLeida[j];
             }
         }
         temp[index] = '\0';
-        InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+        AgregarClon(temp, szPalabrasSugeridas, iNumSugeridas);
     }
 
     // 2. Intercambio (Cambiar letras adyacentes)
     for (int i = 0; i < len - 1; i++) {
-        strcpy(temp, palabraSegura);
+        strncpy(temp, szPalabraLeida, len);
+        temp[len] = '\0';
         char c = temp[i];
         temp[i] = temp[i + 1];
         temp[i + 1] = c;
-        InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+        AgregarClon(temp, szPalabrasSugeridas, iNumSugeridas);
     }
 
     // 3. Sustitución (Reemplazar 1 letra)
     for (int i = 0; i < len; i++) {
         for (int a = 0; alfabeto[a] != '\0'; a++) {
-            strcpy(temp, palabraSegura);
+            strncpy(temp, szPalabraLeida, len);
+            temp[len] = '\0';
             temp[i] = alfabeto[a];
-            InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+            AgregarClon(temp, szPalabrasSugeridas, iNumSugeridas);
         }
     }
 
@@ -170,19 +137,15 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
     for (int i = 0; i <= len; i++) {
         for (int a = 0; alfabeto[a] != '\0'; a++) {
             int index = 0;
-            // Lado izquierdo
             for (int j = 0; j < i; j++) {
-                temp[index++] = palabraSegura[j];
+                temp[index++] = szPalabraLeida[j];
             }
-            // Letra insertada
             temp[index++] = alfabeto[a];
-            // Lado derecho
             for (int j = i; j < len; j++) {
-                temp[index++] = palabraSegura[j];
+                temp[index++] = szPalabraLeida[j];
             }
             temp[index] = '\0';
-            
-            InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+            AgregarClon(temp, szPalabrasSugeridas, iNumSugeridas);
         }
     }
 }
@@ -192,5 +155,60 @@ void ListaCandidatas(
 	char szPalabras[][TAMTOKEN], int iEstadisticas[], int iNumElementos,
 	char szListaFinal[][TAMTOKEN], int iPeso[], int &iNumLista)
 {
-    // Pendiente para la siguiente fase
+    iNumLista = 0;
+
+    for (int i = 0; i < iNumSugeridas; i++) {
+        // Búsqueda binaria de la palabra clonada en el diccionario general
+        int izq = 0, der = iNumElementos - 1;
+        int idxEncontrado = -1;
+
+        while (izq <= der) {
+            int medio = izq + (der - izq) / 2;
+            int cmp = strcmp(szPalabrasSugeridas[i], szPalabras[medio]);
+            
+            if (cmp == 0) {
+                idxEncontrado = medio;
+                break;
+            } else if (cmp < 0) {
+                der = medio - 1;
+            } else {
+                izq = medio + 1;
+            }
+        }
+
+        // Si la palabra clonada sí existe en el diccionario
+        if (idxEncontrado != -1) {
+            // Evitar duplicados en la lista final de candidatas
+            bool yaExiste = false;
+            for (int j = 0; j < iNumLista; j++) {
+                if (strcmp(szListaFinal[j], szPalabrasSugeridas[i]) == 0) {
+                    yaExiste = true;
+                    break;
+                }
+            }
+
+            // Si es nueva, se inserta ordenadamente por peso (frecuencia estadística) de mayor a menor
+            if (!yaExiste) {
+                int pos = iNumLista;
+                // Si tienen el mismo peso, se desempatan alfabéticamente
+                while (pos > 0) {
+                    if (iEstadisticas[idxEncontrado] > iPeso[pos - 1]) {
+                        // Desplazar hacia abajo
+                    } else if (iEstadisticas[idxEncontrado] == iPeso[pos - 1] && 
+                               strcmp(szPalabrasSugeridas[i], szListaFinal[pos - 1]) < 0) {
+                        // Desplazar hacia abajo por orden alfabético
+                    } else {
+                        break;
+                    }
+                    strcpy(szListaFinal[pos], szListaFinal[pos - 1]);
+                    iPeso[pos] = iPeso[pos - 1];
+                    pos--;
+                }
+                
+                strcpy(szListaFinal[pos], szPalabrasSugeridas[i]);
+                iPeso[pos] = iEstadisticas[idxEncontrado];
+                iNumLista++;
+            }
+        }
+    }
 }
