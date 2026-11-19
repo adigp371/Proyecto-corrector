@@ -4,6 +4,37 @@
 #include <ctype.h>
 #include "corrector.h"
 
+// Función auxiliar para no repetir el código de búsqueda binaria e inserción 4 veces
+void InsertarSugerencia(char *temp, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
+{
+    int izq = 0, der = iNumSugeridas - 1, pos = 0;
+    bool existe = false;
+
+    while (izq <= der) {
+        int medio = izq + (der - izq) / 2;
+        int comp = strcmp(temp, szPalabrasSugeridas[medio]);
+        if (comp == 0) { 
+            existe = true; 
+            break; 
+        }
+        if (comp < 0) { 
+            der = medio - 1; 
+            pos = medio; 
+        } else { 
+            izq = medio + 1; 
+            pos = izq; 
+        }
+    }
+
+    if (!existe && iNumSugeridas < 5000) { // Límite para evitar desbordamiento
+        for(int k = iNumSugeridas; k > pos; k--) {
+            strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
+        }
+        strcpy(szPalabrasSugeridas[pos], temp);
+        iNumSugeridas++;
+    }
+}
+
 void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int &iNumElementos)
 {
     FILE *origin;
@@ -12,8 +43,7 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 
     if (origin != NULL) { 
         char linea[1024];
-        // Ampliación de delimitadores para evitar fusiones con signos de puntuación extendidos
-        const char *delimiters = " ,;().\r\t\n¿?¡!-\":_"; 
+        const char *delimiters = " ,;().\r\t\n"; 
 
         while(fgets(linea, sizeof(linea), origin) != NULL) { 
             char *palabra = strtok(linea, delimiters); 
@@ -24,10 +54,8 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
                 
                 for (int k = 0; palabra[k] != '\0' && index < TAMTOKEN - 1; k++) {
                     unsigned char c = (unsigned char)palabra[k];
+                    // Solo convertir letras sin acento a minúsculas
                     if (c >= 'A' && c <= 'Z') {
-                        palabra_Limpia[index++] = c + 32; 
-                    }
-                    else if (c == 193 || c == 201 || c == 205 || c == 211 || c == 218 || c == 209 || c == 220) {
                         palabra_Limpia[index++] = c + 32; 
                     }
                     else {
@@ -57,7 +85,7 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
                         }
                     }
 
-                    if (!existe) {
+                    if (!existe && iNumElementos < 50000) { 
                         for(int j = iNumElementos; j > pos; j--) {
                             strcpy(szPalabras[j], szPalabras[j - 1]);
                             iEstadisticas[j] = iEstadisticas[j - 1];
@@ -78,57 +106,62 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
 {
     iNumSugeridas = 0;
     char temp[TAMTOKEN];
-    int izq, der, medio, comp, pos;
-    bool existe;
 
+    // 0. Palabra original
     strcpy(szPalabrasSugeridas[0], szPalabraLeida);
     iNumSugeridas = 1;
 
     int len = strlen(szPalabraLeida);
     if (len >= TAMTOKEN) len = TAMTOKEN - 1; 
 
-    // Supresión
+    // 1. Supresión (Borrar 1 letra)
     for (int i = 0; i < len; i++) {
         int index = 0;
         for (int j = 0; j < len; j++) {
-            if (j != i) temp[index++] = szPalabraLeida[j];
+            if (j != i) {
+                temp[index++] = szPalabraLeida[j];
+            }
         }
         temp[index] = '\0';
-        
-        izq = 0; der = iNumSugeridas - 1; pos = 0; existe = false;
-        while (izq <= der) {
-            medio = izq + (der - izq) / 2;
-            comp = strcmp(temp, szPalabrasSugeridas[medio]);
-            if (comp == 0) { existe = true; break; }
-            if (comp < 0) { der = medio - 1; pos = medio; }
-            else { izq = medio + 1; pos = izq; }
-        }
-        if (!existe && iNumSugeridas < 5000) { // Prevención de buffer overflow
-            for(int k = iNumSugeridas; k > pos; k--) strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
-            strcpy(szPalabrasSugeridas[pos], temp);
-            iNumSugeridas++;
-        }
+        InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
     }
 
-    // Intercambio
+    // 2. Intercambio (Cambiar letras adyacentes)
     for (int i = 0; i < len - 1; i++) {
         strcpy(temp, szPalabraLeida);
         char c = temp[i];
         temp[i] = temp[i + 1];
         temp[i + 1] = c;
-        
-        izq = 0; der = iNumSugeridas - 1; pos = 0; existe = false;
-        while (izq <= der) {
-            medio = izq + (der - izq) / 2;
-            comp = strcmp(temp, szPalabrasSugeridas[medio]);
-            if (comp == 0) { existe = true; break; }
-            if (comp < 0) { der = medio - 1; pos = medio; }
-            else { izq = medio + 1; pos = izq; }
+        InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+    }
+
+    // 3. Sustitución (Reemplazar 1 letra por 'a'-'z')
+    for (int i = 0; i < len; i++) {
+        for (char c = 'a'; c <= 'z'; c++) {
+            strcpy(temp, szPalabraLeida);
+            temp[i] = c;
+            InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
         }
-        if (!existe && iNumSugeridas < 5000) { // Prevención de buffer overflow
-            for(int k = iNumSugeridas; k > pos; k--) strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
-            strcpy(szPalabrasSugeridas[pos], temp);
-            iNumSugeridas++;
+    }
+
+    // 4. Inserción (Agregar 1 letra 'a'-'z' en cada posición, inclusive al final)
+    if (len < TAMTOKEN - 1) { 
+        for (int i = 0; i <= len; i++) {
+            for (char c = 'a'; c <= 'z'; c++) {
+                int index = 0;
+                // Copiar la parte antes de la inserción
+                for (int j = 0; j < i; j++) {
+                    temp[index++] = szPalabraLeida[j];
+                }
+                // Insertar nueva letra
+                temp[index++] = c;
+                // Copiar el resto
+                for (int j = i; j < len; j++) {
+                    temp[index++] = szPalabraLeida[j];
+                }
+                temp[index] = '\0';
+                InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+            }
         }
     }
 }
@@ -138,5 +171,5 @@ void ListaCandidatas(
 	char szPalabras[][TAMTOKEN], int iEstadisticas[], int iNumElementos,
 	char szListaFinal[][TAMTOKEN], int iPeso[], int &iNumLista)
 {
-    // Implementación pendiente
+    // Aún en blanco para tu futura implementación
 }
