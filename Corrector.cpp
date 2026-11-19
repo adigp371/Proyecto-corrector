@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "corrector.h"
 
-// Función auxiliar que inserta ordenado alfabéticamente pero PERMITE duplicados
+// Funcion auxiliar que inserta en orden alfabetico permitiendo duplicados
 void InsertarSugerencia(const char *temp, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
 {
     if (temp[0] == '\0') {
@@ -14,12 +14,12 @@ void InsertarSugerencia(const char *temp, char szPalabrasSugeridas[][TAMTOKEN], 
     int izq = 0, der = iNumSugeridas - 1;
     int pos = iNumSugeridas;
 
-    // Búsqueda binaria para encontrar la posición correcta alfabéticamente
+    // Busqueda binaria para encontrar la posicion correcta
     while (izq <= der) {
         int medio = izq + (der - izq) / 2;
         int comp = strcmp(temp, szPalabrasSugeridas[medio]);
         
-        // Si comp es 0 (son idénticas), no rompemos el ciclo, 
+        // Si comp es 0 (son idénticas), no rompemos el ciclo 
         // dejamos que se inserte a un lado del elemento duplicado.
         if (comp < 0) {
             der = medio - 1;
@@ -34,7 +34,7 @@ void InsertarSugerencia(const char *temp, char szPalabrasSugeridas[][TAMTOKEN], 
         strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
     }
     
-    // Copia segura limitando el tamaño máximo
+    // Copia segura limitando el tamaño max
     strncpy(szPalabrasSugeridas[pos], temp, TAMTOKEN - 1);
     szPalabrasSugeridas[pos][TAMTOKEN - 1] = '\0';
     iNumSugeridas++;
