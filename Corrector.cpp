@@ -110,4 +110,34 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         }
     }
 
-    //
+    // 3. Intercambio de caracteres adyacentes
+    for (int i = 0; i < len - 1; i++) {
+        strcpy(temp, szPalabraLeida);
+        char c = temp[i];
+        temp[i] = temp[i + 1];
+        temp[i + 1] = c;
+        
+        // Bloque de inserción ordenada
+        izq = 0; der = iNumSugeridas - 1; pos = 0; existe = false;
+        while (izq <= der) {
+            medio = izq + (der - izq) / 2;
+            comp = strcmp(temp, szPalabrasSugeridas[medio]);
+            if (comp == 0) { existe = true; break; }
+            if (comp < 0) { der = medio - 1; pos = medio; }
+            else { izq = medio + 1; pos = izq; }
+        }
+        if (!existe) {
+            for(int k = iNumSugeridas; k > pos; k--) strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
+            strcpy(szPalabrasSugeridas[pos], temp);
+            iNumSugeridas++;
+        }
+    }
+} // <--- Faltaba cerrar esta llave
+
+void ListaCandidatas(
+	char szPalabrasSugeridas[][TAMTOKEN], int iNumSugeridas,
+	char szPalabras[][TAMTOKEN], int iEstadisticas[], int iNumElementos,
+	char szListaFinal[][TAMTOKEN], int iPeso[], int &iNumLista)
+{
+    // Función vacía para cumplir con la firma requerida
+}
