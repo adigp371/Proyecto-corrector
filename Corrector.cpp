@@ -8,7 +8,7 @@
 void InsertarSugerencia(const char *temp, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
 {
     if (temp[0] == '\0') {
-        return; 
+        return; // Rompemos la funcion para evitar corromper el arreglo de sugeridas con vacios
     }
 
     int izq = 0, der = iNumSugeridas - 1;
@@ -19,25 +19,25 @@ void InsertarSugerencia(const char *temp, char szPalabrasSugeridas[][TAMTOKEN], 
         int medio = izq + (der - izq) / 2;
         int comp = strcmp(temp, szPalabrasSugeridas[medio]);
         
-        // Si comp es 0 (son idénticas), no rompemos el ciclo 
+        // Si comp es 0 , no se rompe el ciclo
         // dejamos que se inserte a un lado del elemento duplicado.
-        if (comp < 0) {
+        if (comp < 0) { // Siempre vamos a asumir que la palabra es la ultima a la derecha y trabajar ocn la izq
             der = medio - 1;
             pos = medio;
         } else {
-            izq = medio + 1;
+            izq = medio + 1; // Tanto la igual dad como la dereche se trabajan en conjunto
         }
     }
 
     // Desplazar elementos para hacerle espacio a la nueva palabra
     for (int k = iNumSugeridas; k > pos; k--) {
-        strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]);
-    }
+        strcpy(szPalabrasSugeridas[k], szPalabrasSugeridas[k - 1]); // Desplazamos desde el maximo numero de posiciones hasta la pos esperada
+    }                                                              // Recorriendo a la derecha
     
     // Copia segura limitando el tamaño max
-    strncpy(szPalabrasSugeridas[pos], temp, TAMTOKEN - 1);
-    szPalabrasSugeridas[pos][TAMTOKEN - 1] = '\0';
-    iNumSugeridas++;
+    strncpy(szPalabrasSugeridas[pos], temp, TAMTOKEN - 1); // Se guarda la palabra en la poscicion indicada limitando el tamaño de la misma
+    szPalabrasSugeridas[pos][TAMTOKEN - 1] = '\0'; // Cerramos el string
+    iNumSugeridas++; // Aumentamos el numero de palabras sugeridas
 }
 
 void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int &iNumElementos)
