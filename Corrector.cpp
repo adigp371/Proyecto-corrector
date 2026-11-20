@@ -42,31 +42,34 @@ void InsertarSugerencia(const char *temp, char szPalabrasSugeridas[][TAMTOKEN], 
 
 void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[], int &iNumElementos)
 {
-    FILE *origin;
-    iNumElementos = 0;
-    origin = fopen(szNombre, "r");
+    FILE *origin; // Declaracion de la variable de archivo
+    iNumElementos = 0; //Elementos en el diccionario
+    origin = fopen(szNombre, "r"); //Apertura del archivo en modo lectura
 
     if (origin != NULL) { 
-        char linea[1024];
-        const char *delimiters = " ,;().\r\t\n"; 
+        char linea[1024]; // Tamaño de linea 1023 bytes
+        const char *delimiters = " ,;().\r\t\n"; // Delimitadores donde se cortaran las palabras
 
-        while(fgets(linea, sizeof(linea), origin) != NULL) { 
-            char *palabra = strtok(linea, delimiters); 
-            
-            while (palabra != NULL) {
-                char palabra_Limpia[TAMTOKEN] = ""; 
-                int index = 0; 
+        while(fgets(linea, sizeof(linea), origin) != NULL) { // Leemos linea a linea hasta el final del archivo
+            char *palabra = strtok(linea, delimiters); // USo de funcion strtok para separar las palabras, se direge como puntero para
+                                                    // modificar el arreglo original
+
+            while (palabra != NULL) { // El ciclo maneja las palabras de la linea hasta que se acaben 
+                char palabra_Limpia[TAMTOKEN] = "";  // Se declara palabra limpia vacia para evitar basura
+                int Write_index = 0; // Puntero auxiliar para la escritura de la palabra
                 
-                for (int k = 0; palabra[k] != '\0' && index < TAMTOKEN - 1; k++) {
-                    unsigned char c = (unsigned char)palabra[k];
-                    if (c >= 'A' && c <= 'Z') {
-                        palabra_Limpia[index++] = c + 32; 
+                for (int k = 0; palabra[k] != '\0' && Write_index < TAMTOKEN - 1; k++) { // Se evita que el puntero de escritura escriba en '\0'
+                    unsigned char c = (unsigned char)palabra[k]; // Se declara sin signo para evitar probelmas con carcacteres especiales
+                    if (c >= 'A' && c <= 'Z') { 
+                        palabra_Limpia[Write_index] = c + 32;
+                        Write_index++; 
                     }
                     else {
-                        palabra_Limpia[index++] = c; 
+                        palabra_Limpia[Write_index] = c;
+                        Write_index++; 
                     }
                 }
-                palabra_Limpia[index] = '\0'; 
+                palabra_Limpia[Write_index] = '\0'; // Se cierra el arreglo de la palabra
 
                 if (strlen(palabra_Limpia) > 0) {
                     int izq = 0, der = iNumElementos - 1;
@@ -98,8 +101,8 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
                         iNumElementos++;
                     }
                 }
-                palabra = strtok(NULL, delimiters); 
-            }
+                palabra = strtok(NULL, delimiters); // Volvemos a llamra a la funcion utilizando NULL para iniciar desde donde se quedo 
+            }                                       // el puntero de la propia funcion en arreglo de linea 
         }
         fclose(origin);
     }
