@@ -60,6 +60,7 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
                 
                 for (int k = 0; palabra[k] != '\0' && Write_index < TAMTOKEN - 1; k++) { // Se evita que el puntero de escritura escriba en '\0'
                     unsigned char c = (unsigned char)palabra[k]; // Se declara sin signo para evitar probelmas con carcacteres especiales
+                    
                     if (c >= 'A' && c <= 'Z') { 
                         palabra_Limpia[Write_index] = c + 32;
                         Write_index++; 
