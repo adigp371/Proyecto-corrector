@@ -112,7 +112,7 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
 void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], int &iNumSugeridas) 
 {
     iNumSugeridas = 0;
-    char temp[256]; 
+    char clonTemporal[256]; 
     
     // Alfabeto utilizando códigos Hexadecimales de un solo byte 
     // \xE1=á, \xE9=é, \xED=í, \xF3=ó, \xFA=ú, \xF1=ñ
@@ -131,30 +131,30 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         int index = 0;
         for (int j = 0; j < len; j++) {
             if (j != i) {
-                temp[index++] = szPalabraLeida[j];
+                clonTemporal[index++] = szPalabraLeida[j];
             }
         }
-        temp[index] = '\0';
-        InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+        clonTemporal[index] = '\0';
+        InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
     }
 
     // 2. Intercambio (Cambiar letras adyacentes)
     for (int i = 0; i < len - 1; i++) {
-        strncpy(temp, szPalabraLeida, len);
-        temp[len] = '\0';
-        char c = temp[i];
-        temp[i] = temp[i + 1];
-        temp[i + 1] = c;
-        InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+        strncpy(clonTemporal, szPalabraLeida, len);
+        clonTemporal[len] = '\0';
+        char c = clonTemporal[i];
+        clonTemporal[i] = clonTemporal[i + 1];
+        clonTemporal[i + 1] = c;
+        InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
     }
 
     // 3. Sustitución (Reemplazar 1 letra)
     for (int i = 0; i < len; i++) {
         for (int a = 0; alfabeto[a] != '\0'; a++) {
-            strncpy(temp, szPalabraLeida, len);
-            temp[len] = '\0';
-            temp[i] = alfabeto[a];
-            InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+            strncpy(clonTemporal, szPalabraLeida, len);
+            clonTemporal[len] = '\0';
+            clonTemporal[i] = alfabeto[a];
+            InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
         }
     }
 
@@ -163,14 +163,14 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         for (int a = 0; alfabeto[a] != '\0'; a++) {
             int index = 0;
             for (int j = 0; j < i; j++) {
-                temp[index++] = szPalabraLeida[j];
+                clonTemporal[index++] = szPalabraLeida[j];
             }
-            temp[index++] = alfabeto[a];
+            clonTemporal[index++] = alfabeto[a];
             for (int j = i; j < len; j++) {
-                temp[index++] = szPalabraLeida[j];
+                clonTemporal[index++] = szPalabraLeida[j];
             }
-            temp[index] = '\0';
-            InsertarSugerencia(temp, szPalabrasSugeridas, iNumSugeridas);
+            clonTemporal[index] = '\0';
+            InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
         }
     }
 }
