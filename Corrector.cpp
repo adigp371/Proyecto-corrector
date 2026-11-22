@@ -93,11 +93,11 @@ void Diccionario(char *szNombre, char szPalabras[][TAMTOKEN], int iEstadisticas[
                     }
 
                     if (!existe && iNumElementos < 50000) { 
-                        for(int j = iNumElementos; j > pos; j--) {
+                        for(int j = iNumElementos; j > pos; j--) { // Se recorre el arreglo a la derecha hasta la posicion de insercion 
                             strcpy(szPalabras[j], szPalabras[j - 1]);
                             iEstadisticas[j] = iEstadisticas[j - 1];
                         }
-                        strcpy(szPalabras[pos], palabra_Limpia);
+                        strcpy(szPalabras[pos], palabra_Limpia); // Se copia la palabra nueva en la posicion correspondiente
                         iEstadisticas[pos] = 1;
                         iNumElementos++;
                     }
