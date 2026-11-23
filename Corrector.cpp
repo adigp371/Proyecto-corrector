@@ -116,7 +116,7 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
     
     // Alfabeto utilizando códigos Hexadecimales de un solo byte 
     // \xE1=á, \xE9=é, \xED=í, \xF3=ó, \xFA=ú, \xF1=ñ
-    const char alfabeto[] = "abcdefghijklmnopqrstuvwxyz\xE1\xE9\xED\xF3\xFA\xF1";
+    const char alfabeto[] = "abcdefghijklmnopqrstuvwxyz\xE1\xE9\xED\xF3\xFA\xF1"; // Inyectamos en memoria los caracteres especiales de un bit
 
     int len = strlen(szPalabraLeida);
     if (len > TAMTOKEN - 2) {
@@ -131,7 +131,8 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         int index = 0;
         for (int j = 0; j < len; j++) {
             if (j != i) {
-                clonTemporal[index++] = szPalabraLeida[j];
+                clonTemporal[index] = szPalabraLeida[j];
+                index++;
             }
         }
         clonTemporal[index] = '\0';
@@ -163,11 +164,14 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
         for (int a = 0; alfabeto[a] != '\0'; a++) {
             int index = 0;
             for (int j = 0; j < i; j++) {
-                clonTemporal[index++] = szPalabraLeida[j];
+                clonTemporal[index] = szPalabraLeida[j];
+                index++;
             }
-            clonTemporal[index++] = alfabeto[a];
+            clonTemporal[index] = alfabeto[a];
+            index++;
             for (int j = i; j < len; j++) {
-                clonTemporal[index++] = szPalabraLeida[j];
+                clonTemporal[index] = szPalabraLeida[j];
+                index++;
             }
             clonTemporal[index] = '\0';
             InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
