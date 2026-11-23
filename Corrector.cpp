@@ -118,49 +118,49 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
     // \xE1=á, \xE9=é, \xED=í, \xF3=ó, \xFA=ú, \xF1=ñ
     const char alfabeto[] = "abcdefghijklmnopqrstuvwxyz\xE1\xE9\xED\xF3\xFA\xF1"; // Inyectamos en memoria los caracteres especiales de un bit
 
-    int len = strlen(szPalabraLeida);
-    if (len > TAMTOKEN - 2) {
-        len = TAMTOKEN - 2; 
+    int longitudPalabra = strlen(szPalabraLeida);
+    if (longitudPalabra > TAMTOKEN - 2) { // Limitamos la capacidad de la palabra leida para evitar overflow
+        longitudPalabra = TAMTOKEN - 2; 
     }
 
-    // 0. Palabra original
+    // Insertamos la palabra original
     InsertarSugerencia(szPalabraLeida, szPalabrasSugeridas, iNumSugeridas);
 
-    // 1. Supresión (Borrar 1 letra)
-    for (int i = 0; i < len; i++) {
-        int index = 0;
-        for (int j = 0; j < len; j++) {
-            if (j != i) {
-                clonTemporal[index] = szPalabraLeida[j];
-                index++;
+    // Supresion de caracteres 
+    for (int i = 0; i < longitudPalabra; i++) { // i es el caracter a suprimir en cada vuelta
+        int Windex = 0;
+        for (int j = 0; j < longitudPalabra; j++) { // Recorremos el resto de la palabra
+            if (j != i) { // Algoritmo de escritura
+                clonTemporal[Windex] = szPalabraLeida[j];
+                Windex++;
             }
         }
-        clonTemporal[index] = '\0';
-        InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
+        clonTemporal[Windex] = '\0'; // Cerramos la cadena
+        InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas); 
     }
 
-    // 2. Intercambio (Cambiar letras adyacentes)
-    for (int i = 0; i < len - 1; i++) {
-        strncpy(clonTemporal, szPalabraLeida, len);
-        clonTemporal[len] = '\0';
-        char c = clonTemporal[i];
-        clonTemporal[i] = clonTemporal[i + 1];
-        clonTemporal[i + 1] = c;
-        InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
+    // Intercambio de caracteres adyacentes
+    for (int i = 0; i < longitudPalabra - 1; i++) {
+        strncpy(clonTemporal, szPalabraLeida, longitudPalabra); // String copy seguro
+        clonTemporal[longitudPalabra] = '\0'; 
+        char c = clonTemporal[i]; // Copiamos el caracter de la vuelta actual 
+        clonTemporal[i] = clonTemporal[i + 1]; // Movemos el caracter adyacente a la pos actual
+        clonTemporal[i + 1] = c; // Intercambiamos el caracter guardado 
+        InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas); // Guardamos en palabras sugeridas
     }
 
-    // 3. Sustitución (Reemplazar 1 letra)
-    for (int i = 0; i < len; i++) {
-        for (int a = 0; alfabeto[a] != '\0'; a++) {
-            strncpy(clonTemporal, szPalabraLeida, len);
-            clonTemporal[len] = '\0';
-            clonTemporal[i] = alfabeto[a];
-            InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas);
+    // Sustitucion de un caracter
+    for (int i = 0; i < longitudPalabra; i++) { // Cracter a intercambiar 
+        for (int a = 0; alfabeto[a] != '\0'; a++) { // Ciclo para cambiar caracteres del alafabeto
+            strncpy(clonTemporal, szPalabraLeida, longitudPalabra);
+            clonTemporal[longitudPalabra] = '\0';
+            clonTemporal[i] = alfabeto[a]; // Insercion de caracter de alfabeto en posicion actual
+            InsertarSugerencia(clonTemporal, szPalabrasSugeridas, iNumSugeridas); 
         }
     }
 
-    // 4. Inserción (Agregar 1 letra)
-    for (int i = 0; i <= len; i++) {
+    // Insercion de un caracter del alfabeto
+    for (int i = 0; i <= longitudPalabra; i++) {
         for (int a = 0; alfabeto[a] != '\0'; a++) {
             int index = 0;
             for (int j = 0; j < i; j++) {
@@ -169,7 +169,7 @@ void ClonaPalabras(char *szPalabraLeida, char szPalabrasSugeridas[][TAMTOKEN], i
             }
             clonTemporal[index] = alfabeto[a];
             index++;
-            for (int j = i; j < len; j++) {
+            for (int j = i; j < longitudPalabra; j++) {
                 clonTemporal[index] = szPalabraLeida[j];
                 index++;
             }
